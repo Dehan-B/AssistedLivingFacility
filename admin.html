@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Seaview Living Facility</title>
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <style>
+        .admin-wrap {
+            max-width: 1100px;
+            margin: 22px auto;
+            padding: 0 18px
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px
+        }
+
+        .admin-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, .85);
+            border: 1px solid rgba(226, 232, 240, .9);
+            box-shadow: var(--shadow);
+        }
+
+        .admin-bar .left {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, .10);
+            border: 1px solid rgba(14, 165, 233, .18);
+            font-weight: 900;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1.2fr 1fr auto;
+            gap: 10px
+        }
+
+        @media (max-width: 900px) {
+            .form-row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .field input,
+        .field textarea {
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(226, 232, 240, .95);
+            background: rgba(248, 250, 252, .9);
+            outline: none;
+            font-weight: 700;
+        }
+
+        .field textarea {
+            min-height: 42px;
+            resize: vertical
+        }
+
+        .btn2 {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(226, 232, 240, .95);
+            background: #fff;
+            font-weight: 950;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        .btn2.primary {
+            border: none;
+            color: #fff;
+            background: linear-gradient(135deg, var(--brand), var(--brand2));
+        }
+
+        .btn2.danger {
+            border: 1px solid rgba(239, 68, 68, .35);
+            background: rgba(239, 68, 68, .08);
+            color: #b91c1c;
+        }
+
+        .btn2:disabled {
+            opacity: .6;
+            cursor: not-allowed
+        }
+
+        .photos {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px
+        }
+
+        .photo-item {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(226, 232, 240, .9);
+            background: rgba(255, 255, 255, .92);
+            box-shadow: var(--shadow);
+        }
+
+        @media (max-width: 900px) {
+            .photo-item {
+                grid-template-columns: 90px 1fr
+            }
+
+            .photo-actions {
+                grid-column: 1 / -1;
+                justify-content: flex-start
+            }
+        }
+
+        .thumb {
+            width: 120px;
+            height: 78px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 1px solid rgba(226, 232, 240, .9);
+            background: #000;
+        }
+
+        @media (max-width: 900px) {
+            .thumb {
+                width: 90px;
+                height: 62px
+            }
+        }
+
+        .photo-fields {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 10px
+        }
+
+        @media (max-width: 900px) {
+            .photo-fields {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .mini {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+            margin-top: 4px
+        }
+
+        .photo-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .drag-handle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px dashed rgba(148, 163, 184, .8);
+            background: rgba(241, 245, 249, .8);
+            color: var(--muted);
+            font-weight: 950;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .dragging {
+            opacity: .55
+        }
+
+        .drop-target {
+            outline: 2px solid rgba(14, 165, 233, .55);
+            outline-offset: 3px
+        }
+
+        .login-card {
+            max-width: 520px;
+            margin: 30px auto;
+            padding: 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(226, 232, 240, .9);
+            background: rgba(255, 255, 255, .92);
+            box-shadow: var(--shadow2);
+        }
+
+        .login-card h2 {
+            margin: 0 0 8px
+        }
+
+        .login-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px
+        }
+
+        .hidden {
+            display: none !important
+        }
+
+        /* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal.hidden { display: none; }
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, .55);
+  backdrop-filter: blur(6px);
+}
+
+.modal-card {
+  position: relative;
+  width: min(520px, 100%);
+  border-radius: 22px;
+  padding: 16px;
+  background: rgba(255, 255, 255, .96);
+  border: 1px solid rgba(226, 232, 240, .95);
+  box-shadow: var(--shadow2);
+  transform: translateY(6px);
+  opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+.modal:not(.hidden) .modal-card {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+    </style>
+</head>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal hidden" id="confirmModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <h3 id="confirmTitle" style="margin:0 0 6px;">Delete photo?</h3>
+        <p class="mini" id="confirmText" style="margin:0 0 14px;">
+            This will remove the photo from the gallery.
+        </p>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+            <button class="btn2" type="button" id="confirmCancel">Cancel</button>
+            <button class="btn2 danger" type="button" id="confirmDelete">Delete</button>
+        </div>
+    </div>
+</div>
+
+
+<body>
+    <header class="topbar">
+        <div class="brand">Seaview Living Facility</div>
+        <nav class="nav">
+            <a href="index.html">Home</a>
+            <a href="gallery.html">Gallery</a>
+            <a href="index.html#contact">Contact</a>
+            <a href="admin.html" class="active admin-link">Admin</a>
+        </nav>
+    </header>
+
+    <main class="admin-wrap">
+
+        <!-- LOGIN -->
+        <section id="loginView" class="login-card">
+            <h2>Admin Login</h2>
+            <p class="mini">Log in with the email + password you created in Supabase.</p>
+
+            <label class="field" style="margin-top:10px;">
+                <span>Email</span>
+                <input id="email" type="email" placeholder="admin@example.com" autocomplete="email" />
+            </label>
+
+            <label class="field" style="margin-top:10px;">
+                <span>Password</span>
+                <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </label>
+
+            <div class="login-actions">
+                <button class="btn2 primary" id="loginBtn" type="button">Log in</button>
+                <span class="mini" id="loginMsg"></span>
+            </div>
+        </section>
+
+        <!-- ADMIN MANAGER -->
+        <section id="adminView" class="hidden">
+            <div class="admin-grid">
+
+                <div class="admin-bar">
+                    <div class="left">
+                        <span class="pill">Gallery Manager</span>
+                        <span class="mini" id="userEmail"></span>
+                        <span class="mini">Tip: drag the handle to reorder</span>
+                    </div>
+                    <div class="right">
+                        <button class="btn2" id="refreshBtn" type="button">Refresh</button>
+                        <button class="btn2 danger" id="logoutBtn" type="button">Logout</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin:0 0 10px;">Upload a new photo</h3>
+
+                    <div class="form-row">
+                        <label class="field">
+                            <span>Photo file</span>
+                            <input id="file" type="file" accept="image/*" />
+                        </label>
+
+                        <label class="field">
+                            <span>Title</span>
+                            <input id="newTitle" type="text" placeholder="e.g. Dining Area" />
+                        </label>
+
+                        <label class="field">
+                            <span>Description</span>
+                            <input id="newDesc" type="text" placeholder="e.g. Fresh meals served daily" />
+                        </label>
+
+                        <div style="display:flex;align-items:flex-end;">
+                            <button class="btn2 primary" id="uploadBtn" type="button">Upload</button>
+                        </div>
+                    </div>
+
+                    <div class="mini" id="uploadMsg" style="margin-top:10px;"></div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin:0 0 8px;">Photos</h3>
+                    <p class="mini" style="margin:0 0 12px;">
+                        Drag and drop to reorder. Edit title/description and click “Save”.
+                    </p>
+
+                    <div class="photos" id="photosList"></div>
+                    <div class="mini" id="saveMsg" style="margin-top:12px;"></div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- IMPORTANT: order matters -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gallery - Seaview Living Facility</title>
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <style>
+        .slider {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 18px
+        }
+
+        .frame {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #000;
+            aspect-ratio: 16/9;
+            user-select: none;
+        }
+
+        .frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            cursor: zoom-in;
+            opacity: 0;
+            transform: scale(1.01);
+            transition: opacity .28s ease, transform .28s ease;
+        }
+
+        .frame img.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Counter */
+        .counter {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .28);
+            background: rgba(15, 23, 42, .55);
+            color: #fff;
+            font-weight: 900;
+            font-size: 13px;
+            backdrop-filter: blur(6px);
+            z-index: 3;
+        }
+
+        /* Arrows ON the photo */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: rgba(15, 23, 42, .55);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 900;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            z-index: 3;
+        }
+
+        .arrow:hover {
+            background: rgba(15, 23, 42, .75)
+        }
+
+        .arrow.left {
+            left: 12px
+        }
+
+        .arrow.right {
+            right: 12px
+        }
+
+        /* Fullscreen button */
+        .fs-btn {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: rgba(15, 23, 42, .55);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            z-index: 3;
+        }
+
+        .fs-btn:hover {
+            background: rgba(15, 23, 42, .75)
+        }
+
+        /* Caption overlay (normal view) */
+        .caption {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            padding: 12px 12px;
+            border-radius: 14px;
+            color: #fff;
+            background: linear-gradient(to top, rgba(2, 6, 23, .72), rgba(2, 6, 23, .15));
+            border: 1px solid rgba(255, 255, 255, .14);
+            backdrop-filter: blur(6px);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .cap-title {
+            font-weight: 900;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .cap-desc {
+            margin-top: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        /* Thumbnail strip */
+        .thumbs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        .thumb-btn {
+            border: none;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            border-radius: 12px;
+            outline: none;
+        }
+
+        .thumb-img {
+            width: 110px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            opacity: .85;
+            transition: opacity .15s, transform .15s, border-color .15s;
+        }
+
+        .thumb-btn:hover .thumb-img {
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+
+        .thumb-btn.active .thumb-img {
+            border-color: var(--brand);
+            opacity: 1;
+        }
+
+        @media (max-width:700px) {
+            .thumb-img {
+                width: 90px;
+                height: 58px;
+            }
+
+            .arrow {
+                width: 48px;
+                height: 48px;
+                font-size: 26px;
+            }
+        }
+
+        /* Lightbox (Fullscreen overlay) */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(2, 6, 23, .92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .lightbox.show {
+            display: flex
+        }
+
+        .lb-inner {
+            position: relative;
+            width: min(1200px, 100%);
+            height: min(80vh, 900px);
+        }
+
+        .lb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 16px;
+            background: #000;
+            border: 1px solid rgba(255, 255, 255, .12);
+            display: block;
+        }
+
+        .lb-close {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 44px;
+            height: 44px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(15, 23, 42, .7);
+            color: #fff;
+            font-size: 22px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        .lb-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: rgba(15, 23, 42, .55);
+            color: #fff;
+            font-size: 26px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        .lb-arrow.left {
+            left: -10px
+        }
+
+        .lb-arrow.right {
+            right: -10px
+        }
+
+        @media (max-width:700px) {
+            .lb-arrow.left {
+                left: 6px
+            }
+
+            .lb-arrow.right {
+                right: 6px
+            }
+        }
+
+        /* Fullscreen caption */
+        .lb-caption {
+            position: absolute;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            padding: 14px;
+            border-radius: 14px;
+            color: #fff;
+            background: linear-gradient(to top, rgba(2, 6, 23, .78), rgba(2, 6, 23, .18));
+            border: 1px solid rgba(255, 255, 255, .14);
+            backdrop-filter: blur(8px);
+            z-index: 2;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand">Seaview Living Facility</div>
+        <nav class="nav">
+            <a href="index.html">Home</a>
+            <a href="gallery.html" class="active">Gallery</a>
+            <a href="index.html#contact">Contact</a>
+            <a href="admin.html" class="admin-link">Admin</a>
+        </nav>
+    </header>
+
+    <main class="slider">
+        <h2>Gallery</h2>
+        <p class="lead" style="color:var(--muted)">Click the photo for fullscreen. Use arrows to switch.</p>
+
+        <div class="frame" id="frame">
+            <img id="slideImg" alt="Facility photo" />
+
+            <div class="counter" id="counter">1 / 1</div>
+
+            <button class="arrow left" id="prevBtn" aria-label="Previous photo">‹</button>
+            <button class="arrow right" id="nextBtn" aria-label="Next photo">›</button>
+            <button class="fs-btn" id="fsBtn" aria-label="Fullscreen">Fullscreen</button>
+
+            <!-- Caption overlay (normal view) -->
+            <div class="caption" id="caption">
+                <div class="cap-title" id="capTitle"></div>
+                <div class="cap-desc" id="capDesc"></div>
+            </div>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="thumbs" id="thumbs"></div>
+    </main>
+
+    <!-- LIGHTBOX -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <div class="lb-inner" role="dialog" aria-modal="true">
+            <img class="lb-img" id="lbImg" alt="Facility photo fullscreen" />
+
+            <!-- Fullscreen caption -->
+            <div class="lb-caption" id="lbCaption">
+                <div class="cap-title" id="lbTitle"></div>
+                <div class="cap-desc" id="lbDesc"></div>
+            </div>
+
+            <button class="lb-close" id="lbClose" aria-label="Close fullscreen">✕</button>
+            <button class="lb-arrow left" id="lbPrev" aria-label="Previous photo">‹</button>
+            <button class="lb-arrow right" id="lbNext" aria-label="Next photo">›</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script src="js/gallery.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,659 @@
+/* =========================
+   SEAVIEW LIVING - STYLES
+   Modern light theme (CLEAN + WORKING)
+   - Hero + Overview: entrance on load (.reveal)
+   - Quick cards + Contact + Footer: animate on view (.reveal-on-view + JS IntersectionObserver)
+   ========================= */
+
+:root {
+    /* Brand */
+    --brand: #0ea5e9;
+    /* sky */
+    --brand2: #2563eb;
+    /* blue */
+    --accent: #22c55e;
+
+    /* Neutrals */
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --soft: #f8fafc;
+    --soft2: #f1f5f9;
+    --text: #0f172a;
+    --muted: #475569;
+    --border: #e2e8f0;
+
+    /* Effects */
+    --shadow: 0 10px 30px rgba(2, 6, 23, .08);
+    --shadow2: 0 20px 50px rgba(2, 6, 23, .10);
+
+    /* Radius */
+    --r12: 12px;
+    --r16: 16px;
+    --r20: 20px;
+    --r24: 24px;
+}
+
+* {
+    box-sizing: border-box
+}
+
+html,
+body {
+    height: 100%
+}
+
+body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color: var(--text);
+    background:
+        radial-gradient(1200px 500px at 10% -10%, rgba(14, 165, 233, .10), transparent 60%),
+        radial-gradient(900px 450px at 95% 10%, rgba(37, 99, 235, .10), transparent 60%),
+        var(--bg);
+}
+
+a {
+    color: inherit
+}
+
+img {
+    max-width: 100%;
+    display: block
+}
+
+input,
+textarea,
+button {
+    font: inherit
+}
+
+/* =========================
+   Layout / Sections
+   ========================= */
+.section {
+    padding: 56px 18px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.section.alt {
+    background: linear-gradient(180deg, rgba(241, 245, 249, .9), rgba(248, 250, 252, .9));
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    max-width: none;
+}
+
+h1,
+h2,
+h3 {
+    letter-spacing: -.02em
+}
+
+.section h2 {
+    margin: 0 0 12px;
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.1;
+}
+
+.section p {
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+/* Heading underline */
+.section h2::after {
+    content: "";
+    display: block;
+    width: 72px;
+    height: 4px;
+    margin-top: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--brand), var(--brand2));
+    opacity: .9;
+}
+
+/* Add space between "Our Care Includes" and the cards */
+.section-title {
+    margin-bottom: 20px;
+}
+
+/* =========================
+   Topbar
+   ========================= */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, .75);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(226, 232, 240, .8);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 900;
+    letter-spacing: .2px;
+}
+
+.brand::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    box-shadow: 0 0 0 5px rgba(14, 165, 233, .18);
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.nav a {
+    text-decoration: none;
+    color: var(--muted);
+    font-weight: 800;
+    padding: 10px 12px;
+    border-radius: 999px;
+}
+
+.nav a:hover {
+    background: rgba(14, 165, 233, .10);
+    color: var(--text);
+}
+
+.nav a.active {
+    color: var(--text);
+    background: rgba(14, 165, 233, .14);
+    border: 1px solid rgba(14, 165, 233, .22);
+}
+
+.nav .admin-link {
+    color: var(--brand2)
+}
+
+/* =========================
+   Hero
+   ========================= */
+.hero {
+    min-height: 70vh;
+    display: flex;
+    align-items: flex-end;
+    background:
+        linear-gradient(120deg, rgba(2, 6, 23, .60), rgba(2, 6, 23, .10)),
+        url("https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1800&q=70") center/cover no-repeat;
+    border-bottom: 1px solid rgba(226, 232, 240, .7);
+}
+
+.hero-overlay {
+    width: 100%;
+    padding: 44px 18px 38px;
+    max-width: 1100px;
+    margin: 0 auto;
+    color: #fff;
+}
+
+.hero h1 {
+    margin: 0;
+    font-size: clamp(30px, 4.5vw, 54px);
+    line-height: 1.05;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+.lead {
+    margin: 12px 0 18px;
+    color: rgba(255, 255, 255, .92);
+    font-size: clamp(15px, 2vw, 18px);
+    max-width: 60ch;
+}
+
+/* Buttons */
+.cta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 900;
+    border: 1px solid rgba(255, 255, 255, .28);
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(2, 6, 23, .22);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 40px rgba(2, 6, 23, .28)
+}
+
+.btn:active {
+    transform: translateY(0)
+}
+
+.btn.primary {
+    border: none;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+}
+
+.btn.small {
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: none;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    color: #fff;
+    box-shadow: var(--shadow);
+}
+
+/* =========================
+   Cards
+   ========================= */
+.card {
+    background: var(--surface);
+    border: 1px solid rgba(226, 232, 240, .85);
+    border-radius: var(--r20);
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+
+.card h3 {
+    margin: 0 0 8px;
+    font-size: 18px
+}
+
+.card p {
+    margin: 0;
+    color: var(--muted)
+}
+
+/* =========================
+   Overview Section
+   ========================= */
+.overview {
+    display: grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+@media (max-width: 900px) {
+    .overview {
+        grid-template-columns: 1fr
+    }
+}
+
+.ov-card {
+    border-radius: var(--r24)
+}
+
+.ov-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 950;
+    color: var(--brand2);
+    background: rgba(14, 165, 233, .12);
+    border: 1px solid rgba(14, 165, 233, .20);
+    padding: 8px 12px;
+    border-radius: 999px;
+}
+
+.ov-title {
+    margin: 12px 0 8px;
+    font-size: clamp(22px, 3vw, 30px);
+    line-height: 1.15;
+}
+
+.ov-text {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.ov-meta {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ov-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(241, 245, 249, .9);
+    border: 1px solid rgba(226, 232, 240, .9);
+    font-weight: 800;
+}
+
+.ov-pill a {
+    text-decoration: none
+}
+
+.ov-pill a:hover {
+    text-decoration: underline
+}
+
+.ov-pill .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, .15);
+}
+
+.ov-side .ov-list {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-weight: 800;
+    line-height: 1.9;
+}
+
+.ov-note {
+    margin-top: 12px;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(14, 165, 233, .10);
+    border: 1px solid rgba(14, 165, 233, .18);
+    font-weight: 900;
+}
+
+/* =========================
+   Quick Cards (6-grid + photo background)
+   ========================= */
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 900px) {
+    .quick-grid {
+        grid-template-columns: 1fr
+    }
+}
+
+.quick-grid-6 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 900px) {
+    .quick-grid-6 {
+        grid-template-columns: 1fr
+    }
+}
+
+.qcard {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 16px;
+    border-radius: var(--r20);
+    background: rgba(255, 255, 255, .92);
+    border: 1px solid rgba(226, 232, 240, .9);
+    box-shadow: var(--shadow2);
+    backdrop-filter: blur(10px);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+}
+
+.qicon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(14, 165, 233, .18), rgba(37, 99, 235, .12));
+    border: 1px solid rgba(14, 165, 233, .25);
+    color: var(--brand2);
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+}
+
+.qicon svg {
+    transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.qtitle {
+    font-weight: 950;
+    letter-spacing: -.01em;
+    margin-top: 2px;
+}
+
+.qtext {
+    color: var(--muted);
+    font-weight: 700;
+    margin-top: 4px;
+    line-height: 1.4;
+    font-size: 14px;
+}
+
+/* Photo cards: uses inline style --bg:url('...') */
+.photo-card {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background:
+        linear-gradient(120deg, rgba(2, 6, 23, .72), rgba(2, 6, 23, .20)),
+        var(--bg) center/cover no-repeat;
+    box-shadow: 0 18px 50px rgba(2, 6, 23, .18);
+}
+
+.photo-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(600px 220px at 10% 0%, rgba(255, 255, 255, .14), transparent 55%);
+    opacity: .65;
+    pointer-events: none;
+    transition: opacity .18s ease;
+}
+
+.photo-card>* {
+    position: relative;
+    z-index: 1
+}
+
+.photo-card .qtitle {
+    color: #fff;
+    text-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+.photo-card .qtext {
+    color: rgba(255, 255, 255, .90)
+}
+
+.photo-card .qicon {
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .20);
+    color: #fff;
+}
+
+/* Hover: premium lift + icon motion */
+.qcard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 26px 70px rgba(2, 6, 23, .16)
+}
+
+.photo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 26px 70px rgba(2, 6, 23, .24)
+}
+
+.photo-card:hover::after {
+    opacity: 1
+}
+
+.qcard:hover .qicon {
+    transform: translateY(-2px) rotate(-2deg) scale(1.04);
+    box-shadow: 0 14px 30px rgba(2, 6, 23, .12);
+}
+
+.qcard:hover .qicon svg {
+    transform: rotate(3deg) scale(1.06);
+}
+
+/* =========================
+   Contact + Map
+   ========================= */
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .contact-grid {
+        grid-template-columns: 1fr
+    }
+}
+
+.map {
+    width: 100%;
+    height: 320px;
+    border: 0;
+    border-radius: var(--r16);
+    box-shadow: var(--shadow);
+}
+
+/* =========================
+   Footer
+   ========================= */
+.footer {
+    padding: 20px 18px;
+    text-align: center;
+    color: var(--muted);
+    border-top: 1px solid rgba(226, 232, 240, .85);
+    background: rgba(255, 255, 255, .6);
+}
+
+/* =========================
+   Entrance on page load (Hero + Overview)
+   Use class .reveal + .delay-*
+   ========================= */
+@keyframes fadeUpSoft {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+        filter: blur(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.reveal {
+    opacity: 0;
+    animation: fadeUpSoft .65s ease forwards;
+}
+
+.delay-1 {
+    animation-delay: .05s
+}
+
+.delay-2 {
+    animation-delay: .12s
+}
+
+.delay-3 {
+    animation-delay: .20s
+}
+
+.delay-4 {
+    animation-delay: .28s
+}
+
+.delay-5 {
+    animation-delay: .36s
+}
+
+.delay-6 {
+    animation-delay: .44s
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal {
+        animation: none;
+        opacity: 1;
+    }
+}
+
+/* =========================
+   Animate on view (Quick cards + Contact + Footer)
+   Use class .reveal-on-view and JS adds .inview
+   ========================= */
+.reveal-on-view {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(2px);
+    transition: opacity .55s ease, transform .55s ease, filter .55s ease;
+    will-change: opacity, transform, filter;
+}
+
+.reveal-on-view.inview {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+/* Stagger ONLY inside a .reveal-group (your 6 quick cards container) */
+.reveal-group .reveal-on-view {
+    transition-delay: 0s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(1) {
+    transition-delay: .06s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(2) {
+    transition-delay: .12s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(3) {
+    transition-delay: .18s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(4) {
+    transition-delay: .24s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(5) {
+    transition-delay: .30s
+}
+
+.reveal-group .reveal-on-view.inview:nth-child(6) {
+    transition-delay: .36s
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal-on-view {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+    }
+}
