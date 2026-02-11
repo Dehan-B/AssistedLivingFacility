@@ -29,7 +29,7 @@ const saveMsg = document.getElementById("saveMsg");
 let photos = [];
 let dragId = null;
 
-let checkingView = false; // prevents double showCorrectView running at once
+let checkingView = false; // prevent overlapping view checks
 
 // ------- Pretty confirm modal (requires modal HTML in admin.html) -------
 const confirmModal = document.getElementById("confirmModal");
@@ -113,7 +113,7 @@ function escapeHtml(str) {
 }
 
 // -------------------
-// Auth / View switching (NON-BLOCKING)
+// Auth / View switching (non-blocking)
 // -------------------
 async function showCorrectView(where = "") {
   if (checkingView) return;
@@ -126,7 +126,7 @@ async function showCorrectView(where = "") {
     if (session?.user) {
       showAdminUI(`Logged in: ${session.user.email || ""}`);
 
-      // ✅ Do not await — never block the UI
+      // load in background (don't block UI)
       loadPhotos().catch(() => {
         setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
       });
@@ -166,18 +166,16 @@ async function login(e) {
     return;
   }
 
-  // ✅ Immediate swap
-  const emailText = data?.user?.email ? `Logged in: ${data.user.email}` : "Logged in";
-  showAdminUI(emailText);
+  showAdminUI(`Logged in: ${data.user.email || ""}`);
 
-  // ✅ Load photos in background (no hang)
+  // load in background (don't block UI)
   loadPhotos().catch(() => {
     setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
   });
 }
 
 async function logout() {
-  // 1) Instant UI swap (no waiting)
+  // instant UI swap
   showLoginUI();
   setMsg(loginMsg, "Logged out ✅");
   setMsg(saveMsg, "");
@@ -185,19 +183,15 @@ async function logout() {
   if (photosList) photosList.innerHTML = "";
   photos = [];
 
-  // 2) Actually sign out
   try {
     await sb.auth.signOut();
   } catch (e) {
-    // If signOut fails, still keep them on login UI
     console.error("signOut error:", e);
   }
 
-  // 3) Force a fresh view check (helps if onAuthStateChange is delayed)
-  checkingView = false; // reset the guard so showCorrectView can run
+  checkingView = false;
   showCorrectView("manual after logout");
 }
-
 
 // -------------------
 // Load Photos
@@ -214,6 +208,7 @@ async function loadPhotos() {
     .order("created_at", { ascending: true });
 
   if (error) {
+    console.error(error);
     setMsg(saveMsg, error.message || "Failed to load photos.", true);
     if (photosList) photosList.innerHTML = `<div class="mini">Could not load photos.</div>`;
     return;
@@ -221,6 +216,30 @@ async function loadPhotos() {
 
   photos = data || [];
   renderPhotos();
+}
+
+// -------------------
+// Persist Sort Order (writes sort_order back to DB)
+// -------------------
+async function persistSortOrder() {
+  setMsg(saveMsg, "Saving order…");
+
+  const updates = photos.map((p, i) => ({ id: p.id, sort_order: i + 1 }));
+
+  const results = await Promise.all(
+    updates.map(u => sb.from("photos").update({ sort_order: u.sort_order }).eq("id", u.id))
+  );
+
+  const failed = results.find(r => r.error);
+  if (failed?.error) {
+    console.error(failed.error);
+    setMsg(saveMsg, failed.error.message || "Failed to save order.", true);
+    return false;
+  }
+
+  setMsg(saveMsg, "Order saved ✅");
+  setTimeout(() => setMsg(saveMsg, ""), 1200);
+  return true;
 }
 
 // -------------------
@@ -286,6 +305,7 @@ function renderPhotos() {
       saveBtn.disabled = false;
 
       if (error) {
+        console.error(error);
         setMsg(saveMsg, error.message || "Failed to save changes.", true);
         return;
       }
@@ -301,14 +321,18 @@ function renderPhotos() {
       openConfirm("This will permanently delete the photo from the gallery.", async () => {
         setMsg(saveMsg, "");
 
+        // 1) Delete file from storage
         const { error: storageErr } = await sb.storage.from("gallery").remove([p.file_path]);
         if (storageErr) {
+          console.error(storageErr);
           setMsg(saveMsg, storageErr.message || "Failed to delete file from storage.", true);
           return;
         }
 
+        // 2) Delete row from DB
         const { error: dbErr } = await sb.from("photos").delete().eq("id", p.id);
         if (dbErr) {
+          console.error(dbErr);
           setMsg(saveMsg, dbErr.message || "Failed to delete from database.", true);
           return;
         }
@@ -318,7 +342,7 @@ function renderPhotos() {
       });
     });
 
-    // Drag reorder (UI reorder only unless you wire persistSortOrder)
+    // Drag reorder
     item.addEventListener("dragstart", (ev) => {
       dragId = p.id;
       item.classList.add("dragging");
@@ -339,7 +363,7 @@ function renderPhotos() {
 
     item.addEventListener("dragleave", () => item.classList.remove("drop-target"));
 
-    item.addEventListener("drop", (ev) => {
+    item.addEventListener("drop", async (ev) => {
       ev.preventDefault();
       item.classList.remove("drop-target");
       if (!dragId) return;
@@ -354,8 +378,9 @@ function renderPhotos() {
       const moved = photos.splice(fromIndex, 1)[0];
       photos.splice(toIndex, 0, moved);
 
-      // If you want persistence, call persistSortOrder() and implement it.
-      renderPhotos();
+      const ok = await persistSortOrder();
+      if (ok) await loadPhotos();
+      else renderPhotos();
     });
 
     photosList.appendChild(item);
@@ -394,6 +419,7 @@ async function uploadPhoto() {
 
     const { error: upErr } = await sb.storage.from("gallery").upload(filePath, file, { upsert: false });
     if (upErr) {
+      console.error(upErr);
       setMsg(uploadMsg, upErr.message || "Upload failed.", true);
       return;
     }
@@ -407,6 +433,7 @@ async function uploadPhoto() {
     });
 
     if (insErr) {
+      console.error(insErr);
       setMsg(uploadMsg, insErr.message || "Database insert failed.", true);
       return;
     }
@@ -427,6 +454,7 @@ async function uploadPhoto() {
 // Init
 // -------------------
 if (!sb) {
+  console.error("window.sb missing (supabaseClient.js not loaded?)");
   setMsg(loginMsg, "Supabase client not loaded. Check supabaseClient.js path.", true);
 } else {
   loginBtn?.addEventListener("click", login);
