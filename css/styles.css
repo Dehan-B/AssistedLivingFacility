@@ -190,7 +190,7 @@ h3 {
     align-items: flex-end;
     background:
         linear-gradient(120deg, rgba(2, 6, 23, .60), rgba(2, 6, 23, .10)),
-        url("https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1800&q=70") center/cover no-repeat;
+        url("../images/hero/scottburghbeach.jpg") center/cover no-repeat;
     border-bottom: 1px solid rgba(226, 232, 240, .7);
 }
 
@@ -656,4 +656,34 @@ h3 {
         filter: none;
         transition: none;
     }
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+}
+
+.brand-main {
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--brand), var(--brand2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+}
+
+.brand-sub {
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 800;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.brand:hover .brand-main {
+    filter: brightness(1.15);
+    transition: .2s ease;
 }
