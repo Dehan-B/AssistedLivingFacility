@@ -20,16 +20,62 @@ const logoutBtn = document.getElementById("logoutBtn");
 const fileEl = document.getElementById("file");
 const newTitleEl = document.getElementById("newTitle");
 const newDescEl = document.getElementById("newDesc");
+const newCategoryEl = document.getElementById("newCategory");
+const newFeaturedEl = document.getElementById("newFeatured");
 const uploadBtn = document.getElementById("uploadBtn");
 const uploadMsg = document.getElementById("uploadMsg");
+const compressMsg = document.getElementById("compressMsg");
 
 const photosList = document.getElementById("photosList");
 const saveMsg = document.getElementById("saveMsg");
+
+// Analytics UI
+const statPhotos = document.getElementById("statPhotos");
+const statViews = document.getElementById("statViews");
+const topViewed = document.getElementById("topViewed");
+const statFeatured = document.getElementById("statFeatured");
 
 let photos = [];
 let dragId = null;
 
 let checkingView = false;
+
+// -------------------
+// Rate limiting (login)
+// -------------------
+const RL_KEY = "seaview_login_rl";
+function getRL() {
+  try { return JSON.parse(localStorage.getItem(RL_KEY) || "{}"); }
+  catch { return {}; }
+}
+function setRL(obj) {
+  localStorage.setItem(RL_KEY, JSON.stringify(obj || {}));
+}
+function getCooldownRemaining() {
+  const rl = getRL();
+  const until = rl.until || 0;
+  return Math.max(0, until - Date.now());
+}
+function setCooldown(ms) {
+  const rl = getRL();
+  rl.until = Date.now() + ms;
+  setRL(rl);
+}
+function recordFail() {
+  const rl = getRL();
+  rl.fails = (rl.fails || 0) + 1;
+
+  // cooldown pattern: after 3 fails, apply cooldown increasing
+  if (rl.fails >= 3) {
+    const step = rl.fails - 2; // 1,2,3...
+    const seconds = Math.min(300, 20 * step); // 20s,40s,60s... max 5min
+    setCooldown(seconds * 1000);
+  }
+  setRL(rl);
+}
+function recordSuccess() {
+  setRL({ fails: 0, until: 0 });
+}
 
 // -------------------
 // Auto-scroll while dragging (desktop)
@@ -71,7 +117,7 @@ function stopAutoScroll() {
 }
 
 // -------------------
-// Pretty confirm modal
+// Confirm modal
 // -------------------
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
@@ -151,8 +197,15 @@ function escapeHtml(str) {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeCategory(cat) {
+  const c = (cat || "").trim();
+  if (!c) return null;
+  // Optional: title-case-ish
+  return c.length > 1 ? c[0].toUpperCase() + c.slice(1) : c.toUpperCase();
+}
+
 // -------------------
-// Auth / View switching (non-blocking)
+// Auth / View switching
 // -------------------
 async function showCorrectView() {
   if (checkingView) return;
@@ -176,11 +229,20 @@ async function showCorrectView() {
   }
 }
 
+// -------------------
+// Login / Logout with rate limiting
+// -------------------
 async function login(e) {
   if (e?.preventDefault) e.preventDefault();
 
   setMsg(loginMsg, "");
   setMsg(saveMsg, "");
+
+  const remaining = getCooldownRemaining();
+  if (remaining > 0) {
+    setMsg(loginMsg, `Too many attempts. Try again in ${Math.ceil(remaining / 1000)}s.`, true);
+    return;
+  }
 
   const email = emailEl?.value?.trim();
   const password = passEl?.value;
@@ -195,20 +257,27 @@ async function login(e) {
   loginBtn.disabled = false;
 
   if (error) {
-    setMsg(loginMsg, error.message, true);
+    recordFail();
+    const rem = getCooldownRemaining();
+    if (rem > 0) {
+      setMsg(loginMsg, `Login failed. Cooldown: ${Math.ceil(rem / 1000)}s.`, true);
+    } else {
+      setMsg(loginMsg, error.message, true);
+    }
     return;
   }
 
+  recordSuccess();
   showAdminUI(`Logged in: ${data.user.email || ""}`);
   loadPhotos().catch(() => setMsg(saveMsg, "Logged in, but couldn't load photos.", true));
 }
 
 async function logout() {
-  // instant UI swap
   showLoginUI();
   setMsg(loginMsg, "Logged out ✅");
   setMsg(saveMsg, "");
   setMsg(uploadMsg, "");
+  setMsg(compressMsg, "");
   if (photosList) photosList.innerHTML = "";
   photos = [];
 
@@ -223,6 +292,38 @@ async function logout() {
 }
 
 // -------------------
+// Analytics render
+// -------------------
+function renderAnalytics() {
+  if (!statPhotos || !statViews || !topViewed || !statFeatured) return;
+
+  const totalPhotos = photos.length;
+  const totalViews = photos.reduce((sum, p) => sum + (p.views ?? 0), 0);
+  const featuredCount = photos.filter(p => !!p.is_featured).length;
+
+  statPhotos.textContent = String(totalPhotos);
+  statViews.textContent = String(totalViews);
+  statFeatured.textContent = `${featuredCount} featured`;
+
+  const top = photos
+    .slice()
+    .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+    .slice(0, 5);
+
+  topViewed.innerHTML = "";
+  if (!top.length) {
+    topViewed.innerHTML = `<li>No photos yet.</li>`;
+    return;
+  }
+
+  top.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = `${p.title || "Untitled"} — ${p.views ?? 0} views`;
+    topViewed.appendChild(li);
+  });
+}
+
+// -------------------
 // Load Photos
 // -------------------
 async function loadPhotos() {
@@ -231,7 +332,7 @@ async function loadPhotos() {
 
   const { data, error } = await sb
     .from("photos")
-    .select("id,file_path,title,description,sort_order,is_active,created_at")
+    .select("id,file_path,title,description,category,is_featured,views,sort_order,is_active,created_at")
     .eq("is_active", true)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: true });
@@ -244,6 +345,7 @@ async function loadPhotos() {
   }
 
   photos = data || [];
+  renderAnalytics();
   renderPhotos();
 }
 
@@ -290,7 +392,7 @@ function renderPhotos() {
     item.dataset.id = p.id;
 
     item.innerHTML = `
-      <img class="thumb" src="${publicUrl(p.file_path)}" alt="photo" />
+      <img class="thumb" src="${publicUrl(p.file_path)}" alt="photo" loading="lazy" />
 
       <div>
         <div class="photo-fields">
@@ -302,8 +404,19 @@ function renderPhotos() {
             <span>Description</span>
             <input type="text" class="descInput" value="${escapeHtml(p.description)}" />
           </label>
+          <label class="field">
+            <span>Category</span>
+            <input type="text" class="catInput" value="${escapeHtml(p.category)}" placeholder="e.g. Rooms" />
+          </label>
         </div>
-        <div class="mini">Order: <strong>${index + 1}</strong></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+          <div class="checkrow" style="flex:1; min-width:220px;">
+            <input type="checkbox" class="featInput" ${p.is_featured ? "checked" : ""} />
+            <span>Featured (Show on Home)</span>
+          </div>
+          <div class="mini" style="margin-top:0;">Views: <strong>${p.views ?? 0}</strong> • Order: <strong>${index + 1}</strong></div>
+        </div>
       </div>
 
       <div class="photo-actions">
@@ -325,17 +438,15 @@ function renderPhotos() {
     const downBtn = item.querySelector(".downBtn");
     const titleInput = item.querySelector(".titleInput");
     const descInput = item.querySelector(".descInput");
+    const catInput = item.querySelector(".catInput");
+    const featInput = item.querySelector(".featInput");
 
-    // Mobile up/down disable edges
     if (upBtn) upBtn.disabled = index === 0;
     if (downBtn) downBtn.disabled = index === photos.length - 1;
 
     upBtn?.addEventListener("click", async () => {
       if (index === 0) return;
-      const tmp = photos[index - 1];
-      photos[index - 1] = photos[index];
-      photos[index] = tmp;
-
+      [photos[index - 1], photos[index]] = [photos[index], photos[index - 1]];
       const ok = await persistSortOrder();
       if (ok) await loadPhotos();
       else renderPhotos();
@@ -343,25 +454,24 @@ function renderPhotos() {
 
     downBtn?.addEventListener("click", async () => {
       if (index === photos.length - 1) return;
-      const tmp = photos[index + 1];
-      photos[index + 1] = photos[index];
-      photos[index] = tmp;
-
+      [photos[index + 1], photos[index]] = [photos[index], photos[index + 1]];
       const ok = await persistSortOrder();
       if (ok) await loadPhotos();
       else renderPhotos();
     });
 
-    // Save title/description
+    // Save
     saveBtn.addEventListener("click", async () => {
       saveBtn.disabled = true;
       setMsg(saveMsg, "");
 
       const newTitle = titleInput.value.trim();
       const newDesc = descInput.value.trim();
+      const newCat = normalizeCategory(catInput.value);
+      const newFeat = !!featInput.checked;
 
       const { error } = await sb.from("photos")
-        .update({ title: newTitle, description: newDesc })
+        .update({ title: newTitle, description: newDesc, category: newCat, is_featured: newFeat })
         .eq("id", p.id);
 
       saveBtn.disabled = false;
@@ -374,6 +484,7 @@ function renderPhotos() {
 
       setMsg(saveMsg, "Saved ✅");
       setTimeout(() => setMsg(saveMsg, ""), 1500);
+      await loadPhotos();
     });
 
     // Delete (modal)
@@ -400,7 +511,7 @@ function renderPhotos() {
       });
     });
 
-    // Desktop drag reorder
+    // Drag reorder
     item.addEventListener("dragstart", (ev) => {
       dragId = p.id;
       item.classList.add("dragging");
@@ -449,6 +560,55 @@ function renderPhotos() {
 }
 
 // -------------------
+// Upload helpers: validate + compress
+// -------------------
+function validateFile(file) {
+  if (!file) return "Choose an image file first.";
+  if (!file.type.startsWith("image/")) return "Only image files are allowed.";
+  const maxMB = 8;
+  if (file.size > maxMB * 1024 * 1024) return `Image too large. Max ${maxMB}MB.`;
+  return null;
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function compressImageFile(file, opts = {}) {
+  const maxW = opts.maxWidth ?? 1600;
+  const quality = opts.quality ?? 0.82; // JPEG quality
+  const img = await loadImageFromFile(file);
+
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  const scale = Math.min(1, maxW / w);
+  const nw = Math.round(w * scale);
+  const nh = Math.round(h * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = nw;
+  canvas.height = nh;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, nw, nh);
+
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", quality)
+  );
+
+  // cleanup object URL
+  try { URL.revokeObjectURL(img.src); } catch {}
+
+  return new File([blob], file.name.replace(/\.(png|webp|jpeg|jpg)$/i, ".jpg"), { type: "image/jpeg" });
+}
+
+// -------------------
 // Upload
 // -------------------
 async function getNextSortOrder() {
@@ -464,22 +624,32 @@ async function getNextSortOrder() {
 
 async function uploadPhoto() {
   setMsg(uploadMsg, "");
-  const file = fileEl?.files?.[0];
+  setMsg(compressMsg, "");
 
-  if (!file) {
-    setMsg(uploadMsg, "Choose an image file first.", true);
+  const original = fileEl?.files?.[0];
+  const err = validateFile(original);
+  if (err) {
+    setMsg(uploadMsg, err, true);
     return;
   }
 
   uploadBtn.disabled = true;
 
   try {
+    // Compress
+    setMsg(compressMsg, "Compressing image…");
+    const compressed = await compressImageFile(original, { maxWidth: 1600, quality: 0.82 });
+
+    const beforeKB = Math.round(original.size / 1024);
+    const afterKB = Math.round(compressed.size / 1024);
+    setMsg(compressMsg, `Compressed: ${beforeKB}KB → ${afterKB}KB ✅`);
+
     const sort_order = await getNextSortOrder();
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const base = safeName(newTitleEl.value) || safeName(file.name);
+    const ext = "jpg";
+    const base = safeName(newTitleEl.value) || safeName(original.name);
     const filePath = `photos/${Date.now()}-${base}.${ext}`;
 
-    const { error: upErr } = await sb.storage.from("gallery").upload(filePath, file, { upsert: false });
+    const { error: upErr } = await sb.storage.from("gallery").upload(filePath, compressed, { upsert: false });
     if (upErr) {
       console.error(upErr);
       setMsg(uploadMsg, upErr.message || "Upload failed.", true);
@@ -490,8 +660,11 @@ async function uploadPhoto() {
       file_path: filePath,
       title: newTitleEl.value.trim(),
       description: newDescEl.value.trim(),
+      category: normalizeCategory(newCategoryEl.value),
+      is_featured: !!newFeaturedEl.checked,
       sort_order,
-      is_active: true
+      is_active: true,
+      views: 0
     });
 
     if (insErr) {
@@ -503,12 +676,17 @@ async function uploadPhoto() {
     fileEl.value = "";
     newTitleEl.value = "";
     newDescEl.value = "";
+    newCategoryEl.value = "";
+    newFeaturedEl.checked = false;
 
     setMsg(uploadMsg, "Uploaded ✅");
     await loadPhotos();
   } finally {
     uploadBtn.disabled = false;
-    setTimeout(() => setMsg(uploadMsg, ""), 1800);
+    setTimeout(() => {
+      setMsg(uploadMsg, "");
+      setMsg(compressMsg, "");
+    }, 2200);
   }
 }
 

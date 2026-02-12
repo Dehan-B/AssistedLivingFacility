@@ -8,6 +8,55 @@
     <link rel="stylesheet" href="css/styles.css" />
 
     <style>
+        :root {
+            --bg: #f6f8fb;
+            --card: rgba(255, 255, 255, .92);
+            --text: #0f172a;
+            --muted: #475569;
+            --border: rgba(226, 232, 240, .95);
+            --shadow: 0 12px 30px rgba(2, 6, 23, .08);
+            --shadow2: 0 18px 40px rgba(2, 6, 23, .12);
+            --brand: #0ea5e9;
+            --brand2: #6366f1;
+        }
+
+        body.dark {
+            --bg: #070b16;
+            --card: rgba(15, 23, 42, .72);
+            --text: #e5e7eb;
+            --muted: rgba(226, 232, 240, .75);
+            --border: rgba(148, 163, 184, .22);
+            --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+            --shadow2: 0 18px 40px rgba(0, 0, 0, .45);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            font-weight: 900;
+            user-select: none;
+        }
+
+        .theme-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 99px;
+            background: linear-gradient(135deg, var(--brand), var(--brand2));
+            display: inline-block;
+        }
+
         .admin-wrap {
             max-width: 1100px;
             margin: 22px auto;
@@ -28,8 +77,8 @@
             flex-wrap: wrap;
             padding: 14px 16px;
             border-radius: 20px;
-            background: rgba(255, 255, 255, .85);
-            border: 1px solid rgba(226, 232, 240, .9);
+            background: var(--card);
+            border: 1px solid var(--border);
             box-shadow: var(--shadow);
         }
 
@@ -51,11 +100,30 @@
             font-weight: 900;
         }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1.2fr 1.2fr 1fr auto;
-            gap: 10px
-        }
+        .form-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-row > *{
+  min-width: 0; /* prevents overflow */
+}
+
+@media (max-width: 700px){
+  .form-row{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Make the upload button span full width on 2-col layout */
+.form-row .upload-col{
+  grid-column: 1 / -1;
+  display:flex;
+  justify-content:flex-end;
+  align-items:flex-end;
+}
+
 
         @media (max-width:900px) {
             .form-row {
@@ -74,10 +142,16 @@
         .field input {
             padding: 10px 12px;
             border-radius: 14px;
-            border: 1px solid rgba(226, 232, 240, .95);
-            background: rgba(248, 250, 252, .9);
+            border: 1px solid var(--border);
+            background: rgba(248, 250, 252, .85);
             outline: none;
             font-weight: 700;
+            color: var(--text);
+        }
+
+        body.dark .field input {
+            background: rgba(2, 6, 23, .35);
+            color: var(--text);
         }
 
         .btn2 {
@@ -86,11 +160,12 @@
             justify-content: center;
             padding: 10px 14px;
             border-radius: 14px;
-            border: 1px solid rgba(226, 232, 240, .95);
-            background: #fff;
+            border: 1px solid var(--border);
+            background: var(--card);
             font-weight: 950;
             cursor: pointer;
             box-shadow: var(--shadow);
+            color: var(--text);
         }
 
         .btn2.primary {
@@ -123,8 +198,8 @@
             align-items: center;
             padding: 12px;
             border-radius: 20px;
-            border: 1px solid rgba(226, 232, 240, .9);
-            background: rgba(255, 255, 255, .92);
+            border: 1px solid var(--border);
+            background: var(--card);
             box-shadow: var(--shadow);
         }
 
@@ -144,7 +219,7 @@
             height: 78px;
             border-radius: 14px;
             object-fit: cover;
-            border: 1px solid rgba(226, 232, 240, .9);
+            border: 1px solid var(--border);
             background: #000;
         }
 
@@ -157,7 +232,7 @@
 
         .photo-fields {
             display: grid;
-            grid-template-columns: 1fr 1.3fr;
+            grid-template-columns: 1fr 1.2fr 1.2fr;
             gap: 10px
         }
 
@@ -196,6 +271,11 @@
             user-select: none;
         }
 
+        body.dark .drag-handle {
+            background: rgba(2, 6, 23, .35);
+            border-color: rgba(148, 163, 184, .35);
+        }
+
         .dragging {
             opacity: .55
         }
@@ -210,8 +290,8 @@
             margin: 30px auto;
             padding: 18px;
             border-radius: 24px;
-            border: 1px solid rgba(226, 232, 240, .9);
-            background: rgba(255, 255, 255, .92);
+            border: 1px solid var(--border);
+            background: var(--card);
             box-shadow: var(--shadow2);
         }
 
@@ -253,12 +333,11 @@
             width: min(520px, 100%);
             border-radius: 22px;
             padding: 16px;
-            background: rgba(255, 255, 255, .96);
-            border: 1px solid rgba(226, 232, 240, .95);
+            background: var(--card);
+            border: 1px solid var(--border);
             box-shadow: var(--shadow2);
         }
 
-        /* Mobile reorder buttons */
         .mobile-order {
             display: none;
             gap: 8px;
@@ -276,23 +355,59 @@
             }
         }
 
-        /* FORCE mobile reorder buttons to show on phones */
-@media (max-width: 900px) {
-  .mobile-order {
-    display: flex !important;
-  }
-  .drag-handle {
-    display: none !important;
-  }
-}
+        /* Checkbox row */
+        .checkrow {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(248, 250, 252, .85);
+            font-weight: 900;
+        }
 
-@media (max-width: 1024px) {
-  .mobile-order {
-    display: flex !important;
-  }
-}
+        body.dark .checkrow {
+            background: rgba(2, 6, 23, .35);
+        }
 
+        .checkrow input {
+            transform: scale(1.1);
+        }
 
+        /* Analytics layout */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .statbox {
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 12px;
+            background: rgba(14, 165, 233, .08);
+            font-weight: 950;
+            box-shadow: var(--shadow);
+        }
+
+        .statbig {
+            font-size: 22px;
+            margin-top: 6px;
+        }
+
+        .toplist {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text);
+            font-weight: 800;
+        }
     </style>
 </head>
 
@@ -342,7 +457,7 @@
                     <div class="left">
                         <span class="pill">Gallery Manager</span>
                         <span class="mini" id="userEmail"></span>
-                        <span class="mini">Desktop: drag • Mobile: ↑↓</span>
+                        <span class="mini">| Refresh if photos are not showing</span>
                     </div>
                     <div class="right">
                         <button class="btn2" id="refreshBtn" type="button">Refresh</button>
@@ -350,6 +465,7 @@
                     </div>
                 </div>
 
+                <!-- Upload -->
                 <div class="card">
                     <h3 style="margin:0 0 10px;">Upload a new photo</h3>
 
@@ -369,14 +485,52 @@
                             <input id="newDesc" type="text" placeholder="e.g. Fresh meals served daily" />
                         </label>
 
+                        <label class="field">
+                            <span>Category</span>
+                            <input id="newCategory" type="text" placeholder="e.g. Rooms / Dining / Outdoor" />
+                        </label>
+
+                        <label class="field">
+                            <span>Featured</span>
+                            <div class="checkrow">
+                                <input id="newFeatured" type="checkbox" />
+                                <span>Show on Home</span>
+                            </div>
+                        </label>
+
                         <div style="display:flex;align-items:flex-end;">
                             <button class="btn2 primary" id="uploadBtn" type="button">Upload</button>
                         </div>
                     </div>
 
                     <div class="mini" id="uploadMsg" style="margin-top:10px;"></div>
+                    <div class="mini" id="compressMsg" style="margin-top:6px;"></div>
                 </div>
 
+                <!-- Analytics -->
+                <div class="card">
+                    <h3 style="margin:0 0 10px;">Analytics</h3>
+                    <div class="analytics-grid">
+                        <div class="statbox">
+                            Total Photos
+                            <div class="statbig" id="statPhotos">0</div>
+                        </div>
+                        <div class="statbox">
+                            Total Views
+                            <div class="statbig" id="statViews">0</div>
+                        </div>
+                        <div class="card" style="padding:12px;">
+                            <div style="font-weight:950; margin-bottom:8px;">Top Viewed</div>
+                            <ol class="toplist" id="topViewed"></ol>
+                        </div>
+                        <div class="card" style="padding:12px;">
+                            <div style="font-weight:950; margin-bottom:8px;">Featured Photos</div>
+                            <div class="mini" id="statFeatured">0 featured</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Photos -->
                 <div class="card">
                     <h3 style="margin:0 0 8px;">Photos</h3>
                     <p class="mini" style="margin:0 0 12px;">
@@ -407,7 +561,27 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
+
+    <script>
+        // Theme toggle
+        (function initTheme() {
+            const btn = document.getElementById("themeToggle");
+            const label = document.getElementById("themeLabel");
+            const stored = localStorage.getItem("theme") || "light";
+            if (stored === "dark") document.body.classList.add("dark");
+            if (label) label.textContent = document.body.classList.contains("dark") ? "Dark" : "Light";
+
+            btn?.addEventListener("click", () => {
+                document.body.classList.toggle("dark");
+                const isDark = document.body.classList.contains("dark");
+                localStorage.setItem("theme", isDark ? "dark" : "light");
+                if (label) label.textContent = isDark ? "Dark" : "Light";
+            });
+        })();
+    </script>
+
     <script src="js/admin.js"></script>
+
 </body>
 
 </html>
