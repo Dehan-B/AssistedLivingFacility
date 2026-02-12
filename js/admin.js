@@ -29,24 +29,23 @@ const saveMsg = document.getElementById("saveMsg");
 let photos = [];
 let dragId = null;
 
-let checkingView = false; // prevent overlapping view checks
+let checkingView = false;
 
 // -------------------
-// Auto-scroll while dragging (fixed + smooth ramp)
+// Auto-scroll while dragging (desktop)
 // -------------------
 let autoScrollInterval = null;
 let lastDragY = null;
 
 function onDragOverAutoScroll(e) {
   lastDragY = e.clientY;
-
   if (autoScrollInterval) return;
 
   autoScrollInterval = setInterval(() => {
     if (lastDragY == null) return;
 
-    const scrollZone = 90; // bigger = starts earlier
-    const maxSpeed = 16;   // bigger = faster
+    const scrollZone = 90;
+    const maxSpeed = 16;
     const vh = window.innerHeight;
 
     const distTop = scrollZone - lastDragY;
@@ -56,7 +55,6 @@ function onDragOverAutoScroll(e) {
       const speed = Math.min(maxSpeed, Math.ceil((distBottom / scrollZone) * maxSpeed));
       window.scrollBy(0, speed);
     }
-
     if (distTop > 0) {
       const speed = Math.min(maxSpeed, Math.ceil((distTop / scrollZone) * maxSpeed));
       window.scrollBy(0, -speed);
@@ -72,7 +70,9 @@ function stopAutoScroll() {
   lastDragY = null;
 }
 
-// ------- Pretty confirm modal (requires modal HTML in admin.html) -------
+// -------------------
+// Pretty confirm modal
+// -------------------
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
 const confirmCancel = document.getElementById("confirmCancel");
@@ -101,9 +101,7 @@ confirmModal?.addEventListener("click", (e) => {
   if (e.target?.dataset?.close === "true") closeConfirm();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && confirmModal && !confirmModal.classList.contains("hidden")) {
-    closeConfirm();
-  }
+  if (e.key === "Escape" && confirmModal && !confirmModal.classList.contains("hidden")) closeConfirm();
 });
 confirmDelete?.addEventListener("click", async () => {
   if (!confirmAction) return;
@@ -156,7 +154,7 @@ function escapeHtml(str) {
 // -------------------
 // Auth / View switching (non-blocking)
 // -------------------
-async function showCorrectView(where = "") {
+async function showCorrectView() {
   if (checkingView) return;
   checkingView = true;
 
@@ -166,13 +164,11 @@ async function showCorrectView(where = "") {
 
     if (session?.user) {
       showAdminUI(`Logged in: ${session.user.email || ""}`);
-      loadPhotos().catch(() => {
-        setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
-      });
+      loadPhotos().catch(() => setMsg(saveMsg, "Logged in, but couldn't load photos.", true));
     } else {
       showLoginUI();
     }
-  } catch (err) {
+  } catch {
     showLoginUI();
     setMsg(loginMsg, "Session check failed. Check browser privacy / console.", true);
   } finally {
@@ -195,9 +191,7 @@ async function login(e) {
   }
 
   loginBtn.disabled = true;
-
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
   loginBtn.disabled = false;
 
   if (error) {
@@ -206,10 +200,7 @@ async function login(e) {
   }
 
   showAdminUI(`Logged in: ${data.user.email || ""}`);
-
-  loadPhotos().catch(() => {
-    setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
-  });
+  loadPhotos().catch(() => setMsg(saveMsg, "Logged in, but couldn't load photos.", true));
 }
 
 async function logout() {
@@ -228,7 +219,7 @@ async function logout() {
   }
 
   checkingView = false;
-  showCorrectView("manual after logout");
+  showCorrectView();
 }
 
 // -------------------
@@ -317,6 +308,12 @@ function renderPhotos() {
 
       <div class="photo-actions">
         <span class="drag-handle" title="Drag to reorder">↕ Drag</span>
+
+        <div class="mobile-order">
+          <button class="btn2 upBtn" type="button">↑</button>
+          <button class="btn2 downBtn" type="button">↓</button>
+        </div>
+
         <button class="btn2 primary saveBtn" type="button">Save</button>
         <button class="btn2 danger deleteBtn" type="button">Delete</button>
       </div>
@@ -324,8 +321,36 @@ function renderPhotos() {
 
     const saveBtn = item.querySelector(".saveBtn");
     const deleteBtn = item.querySelector(".deleteBtn");
+    const upBtn = item.querySelector(".upBtn");
+    const downBtn = item.querySelector(".downBtn");
     const titleInput = item.querySelector(".titleInput");
     const descInput = item.querySelector(".descInput");
+
+    // Mobile up/down disable edges
+    if (upBtn) upBtn.disabled = index === 0;
+    if (downBtn) downBtn.disabled = index === photos.length - 1;
+
+    upBtn?.addEventListener("click", async () => {
+      if (index === 0) return;
+      const tmp = photos[index - 1];
+      photos[index - 1] = photos[index];
+      photos[index] = tmp;
+
+      const ok = await persistSortOrder();
+      if (ok) await loadPhotos();
+      else renderPhotos();
+    });
+
+    downBtn?.addEventListener("click", async () => {
+      if (index === photos.length - 1) return;
+      const tmp = photos[index + 1];
+      photos[index + 1] = photos[index];
+      photos[index] = tmp;
+
+      const ok = await persistSortOrder();
+      if (ok) await loadPhotos();
+      else renderPhotos();
+    });
 
     // Save title/description
     saveBtn.addEventListener("click", async () => {
@@ -335,8 +360,7 @@ function renderPhotos() {
       const newTitle = titleInput.value.trim();
       const newDesc = descInput.value.trim();
 
-      const { error } = await sb
-        .from("photos")
+      const { error } = await sb.from("photos")
         .update({ title: newTitle, description: newDesc })
         .eq("id", p.id);
 
@@ -348,13 +372,11 @@ function renderPhotos() {
         return;
       }
 
-      p.title = newTitle;
-      p.description = newDesc;
       setMsg(saveMsg, "Saved ✅");
       setTimeout(() => setMsg(saveMsg, ""), 1500);
     });
 
-    // Delete (pretty modal)
+    // Delete (modal)
     deleteBtn.addEventListener("click", () => {
       openConfirm("This will permanently delete the photo from the gallery.", async () => {
         setMsg(saveMsg, "");
@@ -378,12 +400,11 @@ function renderPhotos() {
       });
     });
 
-    // Drag reorder
+    // Desktop drag reorder
     item.addEventListener("dragstart", (ev) => {
       dragId = p.id;
       item.classList.add("dragging");
       ev.dataTransfer.effectAllowed = "move";
-
       document.addEventListener("dragover", onDragOverAutoScroll);
     });
 
@@ -391,7 +412,6 @@ function renderPhotos() {
       item.classList.remove("dragging");
       dragId = null;
       document.querySelectorAll(".drop-target").forEach(el => el.classList.remove("drop-target"));
-
       stopAutoScroll();
       document.removeEventListener("dragover", onDragOverAutoScroll);
     });
@@ -445,6 +465,7 @@ async function getNextSortOrder() {
 async function uploadPhoto() {
   setMsg(uploadMsg, "");
   const file = fileEl?.files?.[0];
+
   if (!file) {
     setMsg(uploadMsg, "Choose an image file first.", true);
     return;
@@ -501,10 +522,10 @@ if (!sb) {
   loginBtn?.addEventListener("click", login);
   passEl?.addEventListener("keydown", (e) => { if (e.key === "Enter") login(e); });
 
-  refreshBtn?.addEventListener("click", () => loadPhotos());
+  refreshBtn?.addEventListener("click", loadPhotos);
   logoutBtn?.addEventListener("click", logout);
   uploadBtn?.addEventListener("click", uploadPhoto);
 
-  showCorrectView("on load");
-  sb.auth.onAuthStateChange(() => showCorrectView("auth change"));
+  showCorrectView();
+  sb.auth.onAuthStateChange(() => showCorrectView());
 }

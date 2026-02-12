@@ -57,7 +57,7 @@
             gap: 10px
         }
 
-        @media (max-width: 900px) {
+        @media (max-width:900px) {
             .form-row {
                 grid-template-columns: 1fr
             }
@@ -71,19 +71,13 @@
             color: var(--text);
         }
 
-        .field input,
-        .field textarea {
+        .field input {
             padding: 10px 12px;
             border-radius: 14px;
             border: 1px solid rgba(226, 232, 240, .95);
             background: rgba(248, 250, 252, .9);
             outline: none;
             font-weight: 700;
-        }
-
-        .field textarea {
-            min-height: 42px;
-            resize: vertical
         }
 
         .btn2 {
@@ -134,7 +128,7 @@
             box-shadow: var(--shadow);
         }
 
-        @media (max-width: 900px) {
+        @media (max-width:900px) {
             .photo-item {
                 grid-template-columns: 90px 1fr
             }
@@ -154,7 +148,7 @@
             background: #000;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width:900px) {
             .thumb {
                 width: 90px;
                 height: 62px
@@ -167,7 +161,7 @@
             gap: 10px
         }
 
-        @media (max-width: 900px) {
+        @media (max-width:900px) {
             .photo-fields {
                 grid-template-columns: 1fr
             }
@@ -221,10 +215,6 @@
             box-shadow: var(--shadow2);
         }
 
-        .login-card h2 {
-            margin: 0 0 8px
-        }
-
         .login-actions {
             display: flex;
             gap: 10px;
@@ -238,62 +228,55 @@
         }
 
         /* Modal */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-}
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: grid;
+            place-items: center;
+            padding: 16px;
+        }
 
-.modal.hidden { display: none; }
+        .modal.hidden {
+            display: none;
+        }
 
-.modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(2, 6, 23, .55);
-  backdrop-filter: blur(6px);
-}
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 6, 23, .55);
+            backdrop-filter: blur(6px);
+        }
 
-.modal-card {
-  position: relative;
-  width: min(520px, 100%);
-  border-radius: 22px;
-  padding: 16px;
-  background: rgba(255, 255, 255, .96);
-  border: 1px solid rgba(226, 232, 240, .95);
-  box-shadow: var(--shadow2);
-  transform: translateY(6px);
-  opacity: 0;
-  transition: transform .18s ease, opacity .18s ease;
-}
+        .modal-card {
+            position: relative;
+            width: min(520px, 100%);
+            border-radius: 22px;
+            padding: 16px;
+            background: rgba(255, 255, 255, .96);
+            border: 1px solid rgba(226, 232, 240, .95);
+            box-shadow: var(--shadow2);
+        }
 
-.modal:not(.hidden) .modal-card {
-  transform: translateY(0);
-  opacity: 1;
-}
+        /* Mobile reorder buttons */
+        .mobile-order {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
 
+        @media (max-width:900px) {
+            .drag-handle {
+                display: none;
+            }
+
+            .mobile-order {
+                display: flex;
+            }
+        }
     </style>
 </head>
-
-<!-- DELETE CONFIRM MODAL -->
-<div class="modal hidden" id="confirmModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="true"></div>
-
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-        <h3 id="confirmTitle" style="margin:0 0 6px;">Delete photo?</h3>
-        <p class="mini" id="confirmText" style="margin:0 0 14px;">
-            This will remove the photo from the gallery.
-        </p>
-
-        <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
-            <button class="btn2" type="button" id="confirmCancel">Cancel</button>
-            <button class="btn2 danger" type="button" id="confirmDelete">Delete</button>
-        </div>
-    </div>
-</div>
-
 
 <body>
     <header class="topbar">
@@ -306,7 +289,7 @@
             <a href="index.html">Home</a>
             <a href="gallery.html">Gallery</a>
             <a href="index.html#contact">Contact</a>
-            <a href="admin.html" class="active admin-link">Admin</a>
+            <a href="admin.html" class="active">Admin</a>
         </nav>
     </header>
 
@@ -333,7 +316,7 @@
             </div>
         </section>
 
-        <!-- ADMIN MANAGER -->
+        <!-- ADMIN -->
         <section id="adminView" class="hidden">
             <div class="admin-grid">
 
@@ -341,7 +324,7 @@
                     <div class="left">
                         <span class="pill">Gallery Manager</span>
                         <span class="mini" id="userEmail"></span>
-                        <span class="mini">Tip: drag the handle to reorder</span>
+                        <span class="mini">Desktop: drag • Mobile: ↑↓</span>
                     </div>
                     <div class="right">
                         <button class="btn2" id="refreshBtn" type="button">Refresh</button>
@@ -379,7 +362,7 @@
                 <div class="card">
                     <h3 style="margin:0 0 8px;">Photos</h3>
                     <p class="mini" style="margin:0 0 12px;">
-                        Drag and drop to reorder. Edit title/description and click “Save”.
+                        Desktop: drag & drop. Mobile: use ↑ ↓ buttons.
                     </p>
 
                     <div class="photos" id="photosList"></div>
@@ -391,7 +374,19 @@
 
     </main>
 
-    <!-- IMPORTANT: order matters -->
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal hidden" id="confirmModal" aria-hidden="true">
+        <div class="modal-backdrop" data-close="true"></div>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <h3 id="confirmTitle" style="margin:0 0 6px;">Delete photo?</h3>
+            <p class="mini" id="confirmText" style="margin:0 0 14px;">This will remove the photo.</p>
+            <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                <button class="btn2" type="button" id="confirmCancel">Cancel</button>
+                <button class="btn2 danger" type="button" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/supabaseClient.js"></script>
     <script src="js/admin.js"></script>
