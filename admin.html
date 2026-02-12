@@ -275,6 +275,17 @@
                 display: flex;
             }
         }
+
+        /* FORCE mobile reorder buttons to show on phones */
+@media (max-width: 900px) {
+  .mobile-order {
+    display: flex !important;
+  }
+  .drag-handle {
+    display: none !important;
+  }
+}
+
     </style>
 </head>
 
