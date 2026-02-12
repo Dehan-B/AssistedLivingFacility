@@ -31,6 +31,47 @@ let dragId = null;
 
 let checkingView = false; // prevent overlapping view checks
 
+// -------------------
+// Auto-scroll while dragging (fixed + smooth ramp)
+// -------------------
+let autoScrollInterval = null;
+let lastDragY = null;
+
+function onDragOverAutoScroll(e) {
+  lastDragY = e.clientY;
+
+  if (autoScrollInterval) return;
+
+  autoScrollInterval = setInterval(() => {
+    if (lastDragY == null) return;
+
+    const scrollZone = 90; // bigger = starts earlier
+    const maxSpeed = 16;   // bigger = faster
+    const vh = window.innerHeight;
+
+    const distTop = scrollZone - lastDragY;
+    const distBottom = lastDragY - (vh - scrollZone);
+
+    if (distBottom > 0) {
+      const speed = Math.min(maxSpeed, Math.ceil((distBottom / scrollZone) * maxSpeed));
+      window.scrollBy(0, speed);
+    }
+
+    if (distTop > 0) {
+      const speed = Math.min(maxSpeed, Math.ceil((distTop / scrollZone) * maxSpeed));
+      window.scrollBy(0, -speed);
+    }
+  }, 16);
+}
+
+function stopAutoScroll() {
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+  }
+  lastDragY = null;
+}
+
 // ------- Pretty confirm modal (requires modal HTML in admin.html) -------
 const confirmModal = document.getElementById("confirmModal");
 const confirmText = document.getElementById("confirmText");
@@ -125,8 +166,6 @@ async function showCorrectView(where = "") {
 
     if (session?.user) {
       showAdminUI(`Logged in: ${session.user.email || ""}`);
-
-      // load in background (don't block UI)
       loadPhotos().catch(() => {
         setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
       });
@@ -168,7 +207,6 @@ async function login(e) {
 
   showAdminUI(`Logged in: ${data.user.email || ""}`);
 
-  // load in background (don't block UI)
   loadPhotos().catch(() => {
     setMsg(saveMsg, "Logged in, but couldn't load photos. (Check RLS/Network)", true);
   });
@@ -219,7 +257,7 @@ async function loadPhotos() {
 }
 
 // -------------------
-// Persist Sort Order (writes sort_order back to DB)
+// Persist Sort Order
 // -------------------
 async function persistSortOrder() {
   setMsg(saveMsg, "Saving order…");
@@ -321,7 +359,6 @@ function renderPhotos() {
       openConfirm("This will permanently delete the photo from the gallery.", async () => {
         setMsg(saveMsg, "");
 
-        // 1) Delete file from storage
         const { error: storageErr } = await sb.storage.from("gallery").remove([p.file_path]);
         if (storageErr) {
           console.error(storageErr);
@@ -329,7 +366,6 @@ function renderPhotos() {
           return;
         }
 
-        // 2) Delete row from DB
         const { error: dbErr } = await sb.from("photos").delete().eq("id", p.id);
         if (dbErr) {
           console.error(dbErr);
@@ -347,12 +383,17 @@ function renderPhotos() {
       dragId = p.id;
       item.classList.add("dragging");
       ev.dataTransfer.effectAllowed = "move";
+
+      document.addEventListener("dragover", onDragOverAutoScroll);
     });
 
     item.addEventListener("dragend", () => {
       item.classList.remove("dragging");
       dragId = null;
       document.querySelectorAll(".drop-target").forEach(el => el.classList.remove("drop-target"));
+
+      stopAutoScroll();
+      document.removeEventListener("dragover", onDragOverAutoScroll);
     });
 
     item.addEventListener("dragover", (ev) => {
