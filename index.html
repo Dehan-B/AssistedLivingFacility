@@ -142,7 +142,7 @@
     <header class="topbar">
         <div class="brand">
             <span class="brand-main">Seaview</span>
-            <span class="brand-sub">Living Facility</span>
+            <span class="brand-sub">Live In Facility</span>
         </div>
 
         <nav class="nav">
@@ -155,7 +155,7 @@
 
     <section class="hero">
         <div class="hero-overlay">
-            <h1 class="reveal delay-1">Assisted Live-In Facility</h1>
+            <h1 class="reveal delay-1">Assisted Live In Facility</h1>
             <p class="lead reveal delay-2">For the Elderly with Age-Related Challenges</p>
 
             <div class="cta reveal delay-3">
@@ -417,13 +417,7 @@
 
                     card.innerHTML = `
               <img class="feat-img" src="${publicUrl(p.file_path)}" alt="${p.title || "Featured"}" loading="lazy" />
-              <div class="feat-body">
-                <p class="feat-title">${p.title || "Featured"}</p>
-                <div class="feat-meta">
-                  ${p.category ? `<span class="pill-mini">${p.category}</span>` : ""}
-                  <span class="pill-mini">Views: ${p.views ?? 0}</span>
-                </div>
-              </div>
+              
             `;
 
                     grid.appendChild(card);
